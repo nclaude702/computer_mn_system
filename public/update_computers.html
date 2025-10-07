@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Update Computer - Computer Lab Management</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-brand">Lab Management</div>
+    <button class="nav-toggle" aria-label="toggle navigation">
+      <span class="hamburger"></span>
+    </button>
+    <ul class="nav-menu">
+      <li><a href="home.html">Home</a></li>
+      <li><a href="register.html">Register</a></li>
+      <li><a href="view-users.html">View Users</a></li>
+      <li><a href="view-computers.html">View Computers</a></li>
+      <li><a href="index.html">Logout</a></li>
+    </ul>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="container">
+    <h2>Update Computer</h2>
+    <form id="updateComputerForm">
+      <label for="computerCode">Computer Code</label>
+      <input type="text" id="computerCode" name="computerCode" required />
+
+      <label for="computerDescription">Description</label>
+      <input type="text" id="computerDescription" name="computerDescription" required />
+
+      <label for="computerSerial">Serial Number</label>
+      <input type="text" id="computerSerial" name="computerSerial" required />
+
+      <button type="submit">Update Computer</button>
+    </form>
+  </main>
+
+  <script>
+    // Get computer ID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const computerId = urlParams.get("id");
+
+    if (!computerId) {
+      alert("Computer ID not provided.");
+      window.location.href = "view-computers.html";
+    }
+
+    // Fetch existing data
+    fetch(`/api/computers/${computerId}`)
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("computerCode").value = data.computer_code;
+        document.getElementById("computerDescription").value = data.description;
+        document.getElementById("computerSerial").value = data.serial_number;
+      })
+      .catch(err => {
+        console.error("❌ Error fetching computer data:", err);
+        alert("Failed to load computer data.");
+        window.location.href = "view-computers.html";
+      });
+
+    // Handle form submission
+    document.getElementById("updateComputerForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const updatedData = {
+        computer_code: document.getElementById("computerCode").value,
+        description: document.getElementById("computerDescription").value,
+        serial_number: document.getElementById("computerSerial").value
+      };
+
+      fetch(`/api/computers/${computerId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedData)
+      })
+      .then(res => res.json())
+      .then(result => {
+        alert(result.message || "Computer updated successfully.");
+        window.location.href = "view-computers.html";
+      })
+      .catch(err => {
+        console.error(" Error updating computer:", err);
+        alert("Failed to update computer.");
+      });
+    });
+  </script>
+
+  <script src="js/script.js"></script>
+</body>
+</html>

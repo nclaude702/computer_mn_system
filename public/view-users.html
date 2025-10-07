@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>View Users - Computer Lab Management</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-brand">Lab Management</div>
+    <button class="nav-toggle" aria-label="toggle navigation">
+      <span class="hamburger"></span>
+    </button>
+    <ul class="nav-menu">
+      <li><a href="home.html">Home</a></li>
+      <li><a href="register.html">Register</a></li>
+      <li><a href="view-users.html" class="active">View Users</a></li>
+      <li><a href="view-computers.html">View Computers</a></li>
+      <li><a href="index.html">Logout</a></li>
+    </ul>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="container">
+    <h2>Users List</h2>
+
+    <!-- Update Form -->
+    <form id="updateForm" style="margin-bottom: 20px;">
+      <h3>Update User</h3>
+      <input type="text" id="updateUsername" placeholder="Username" required readonly />
+      <input type="text" id="updatePassword" placeholder="New Password" required />
+      <button type="submit" class="btn">Update</button>
+    </form>
+
+    <!-- Users Table -->
+    <table>
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Password</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="userTableBody">
+        <!-- Populated by JS -->
+      </tbody>
+    </table>
+  </main>
+
+  <!-- Script -->
+  <script>
+    const tbody = document.getElementById("userTableBody");
+    const updateForm = document.getElementById("updateForm");
+    const updateUsernameInput = document.getElementById("updateUsername");
+    const updatePasswordInput = document.getElementById("updatePassword");
+
+    // Load users
+    function loadUsers() {
+      fetch("/api/users")
+        .then(response => response.json())
+        .then(users => {
+          tbody.innerHTML = "";
+          users.forEach(user => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td data-label="Username">${user.username}</td>
+              <td data-label="Password">${user.password}</td>
+              <td data-label="Actions">
+                <button class="btn update" onclick="fillForm('${user.username}', '${user.password}')">Update</button>
+                <button class="btn delete" onclick="deleteUser('${user.username}')">Delete</button>
+              </td>
+            `;
+            tbody.appendChild(tr);
+          });
+        })
+        .catch(err => {
+          console.error(" Error loading users:", err);
+        });
+    }
+
+    // Fill form for update
+    function fillForm(username, password) {
+      updateUsernameInput.value = username;
+      updatePasswordInput.value = password;
+    }
+
+    // Handle form submission
+    updateForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const username = updateUsernameInput.value;
+      const password = updatePasswordInput.value;
+
+      fetch(`/api/users/${username}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password })
+      })
+        .then(res => {
+          if (res.ok) {
+            loadUsers();
+            updateForm.reset();
+            alert(" User updated");
+          } else {
+            alert(" Update failed");
+          }
+        });
+    });
+
+    // Delete user
+    function deleteUser(username) {
+      if (confirm(`Are you sure you want to delete "${username}"?`)) {
+        fetch(`/api/users/${username}`, {
+          method: "DELETE"
+        })
+          .then(res => {
+            if (res.ok) {
+              loadUsers();
+              alert(" User deleted");
+            } else {
+              alert(" Delete failed");
+            }
+          });
+      }
+    }
+
+    // Initial load
+    loadUsers();
+  </script>
+
+</body>
+</html>
